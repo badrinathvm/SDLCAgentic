@@ -16,14 +16,19 @@ class GraphBuilder:
         self.sdlc_node = SDLCNode(llm=self.llm)
 
         # Nodes
+        self.builder.add_node("project_initilization", self.sdlc_node.project_initilization)
+        self.builder.add_node("get_requirements", self.sdlc_node.get_requirements)
         self.builder.add_node("auto_generate_user_stories", self.sdlc_node.auto_generate_user_stories)
 
         # Edges
-        self.builder.add_edge(START, "auto_generate_user_stories")
+        self.builder.add_edge(START, "project_initilization")
+        self.builder.add_edge("project_initilization", "get_requirements")
+        self.builder.add_edge("get_requirements", "auto_generate_user_stories")
         self.builder.add_edge("auto_generate_user_stories", END)
-
+       
+        # self.builder.add_edge("auto_generate_user_stories", END)
         return self.builder
 
     def setup_graph(self):
         self.graph = self.build_graph()
-        return self.graph.compile()
+        return self.graph.compile(interrupt_before=['get_requirements'], checkpointer=self.memory)

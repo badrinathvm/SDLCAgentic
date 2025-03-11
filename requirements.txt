@@ -12,5 +12,5 @@ youtube-transcript-api
 huggingface_hub
 transformers
 langgraph-cli[inmem]
-redis                      
+redis                  
                     
