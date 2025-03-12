@@ -1,5 +1,6 @@
 
 import asyncio
+from typing import Literal
 from src.state.sdlc_state import SDLCState, UserStories
 from langchain_core.messages import SystemMessage
 
@@ -59,6 +60,28 @@ class SDLCNode:
 
         user_stories = await asyncio.gather(*tasks)
         return {"user_stories": user_stories}
-
+    
+    def product_review_decision(self, state: SDLCState):
+        """
+            Reviews the product requirements and returns the decision in state
+        """
+        requirements = state['requirements']
+        decision = "approved" if len(requirements) >= 4 else "feedback"
+        
+        # Return a dictionary with state updates
+        return {"product_decision": decision}
+    
+    def product_decision_router(self, state: SDLCState):
+        """
+            Router function for product review decision
+        """
+        return state["product_decision"]
+        
+    def create_design_document(self, state: SDLCState):
+        """
+            Generates the Design document functional and technical
+        """
+        print("creating design document")
+        return state
 
     

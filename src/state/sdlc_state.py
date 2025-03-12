@@ -26,3 +26,4 @@ class SDLCState(TypedDict):
     next_required_input: Optional[str]
     current_node: str = "project_initilization"
     status: Literal["initialized", "in_progress", "completed", "error"] = "initialized"
+    product_decision: str
