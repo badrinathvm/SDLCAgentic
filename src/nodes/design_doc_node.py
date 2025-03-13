@@ -19,17 +19,22 @@ class DesignNode:
         requirements = state.get('requirements', '')
         user_stories = state.get('user_stories', '')
         project_name = state.get('project_name', '')
+        design_feedback = None
+        if 'design_documents' in state:
+            design_feedback = state.get('design_documents','')['feedback_reason']
 
         functional_documents = self.generate_functional_design(
             project_name=project_name,
             requirements=requirements,
-            user_stories=user_stories
+            user_stories=user_stories,
+            design_feedback=design_feedback
         )
 
         technical_documents = self.generate_technical_design(
             project_name=project_name,
             requirements=requirements,
-            user_stories=user_stories
+            user_stories=user_stories,
+            design_feedback=design_feedback
         )
 
         design_documents = DesignDocument(
@@ -45,7 +50,7 @@ class DesignNode:
             "technical_documents": technical_documents
         }
     
-    def generate_functional_design(self, project_name, requirements, user_stories):
+    def generate_functional_design(self, project_name, requirements, user_stories, design_feedback):
         """
         Helper method to generate functional design document
         """
@@ -61,6 +66,8 @@ class DesignNode:
             
             User Stories:
             {self._format_user_stories(user_stories)}
+
+             {f"When creating this functional design document, please incorporate the following feedback about the requirements: {design_feedback}" if design_feedback else ""}
             
             The functional design document should include the following sections, each with proper Markdown formatting:
             
@@ -85,7 +92,7 @@ class DesignNode:
         # content = self.fix_markdown(content=response.content)
         return response.content    
     
-    def generate_technical_design(self, project_name, requirements, user_stories):
+    def generate_technical_design(self, project_name, requirements, user_stories, design_feedback):
             """
                 Helper method to generate technical design document in Markdown format
             """
@@ -101,6 +108,8 @@ class DesignNode:
                 
                 User Stories:
                 {self._format_user_stories(user_stories)}
+
+                {f"When creating this technical design document, please incorporate the following feedback about the requirements: {design_feedback}" if design_feedback else ""}
                 
                 The technical design document should include the following sections, each with proper Markdown formatting:
                 
@@ -140,9 +149,51 @@ class DesignNode:
                 formatted_stories.append(f"- ID: {story.get('id', 'N/A')}\n  Title: {story.get('title', 'N/A')}\n  Description: {story.get('description', 'N/A')}")
         return '\n'.join(formatted_stories)
     
+    def design_review_router(self, state: SDLCState):
+        """
+            Evaluates design review is required or not.
+        """
+        return state['design_documents']['review_status']
 
     def design_review(self, state: SDLCState):
         """
             Performs the Design review
         """
         pass
+
+    def generate_code(self, state: SDLCState):
+        """
+            Generates the code for the requirements in the design document
+        """
+        print("----- Generating the code ----")
+        prompt = f"""
+        Generate Python code based on the following SDLC state:
+
+            Project Name: {state['project_name']}
+
+            ### Requirements:
+            {"".join([f"- {req}\n" for req in state['requirements']])}
+
+            ### User Stories:
+            {"".join([f"- {story['title']}: {story['description']}\n" for story in state['user_stories']])}
+
+            ### Functional Design Document:
+            {state['design_documents']['functional']}
+
+            ### Technical Design Document:
+            {state['design_documents']['technical']}
+
+            The generated Python code should include:
+
+            1. **Comments for Requirements**: Add each requirement as a comment in the generated code.
+            2. **User Stories Implementation**: Include placeholders for each user story, with its description and acceptance criteria as comments.
+            3. **Functional Design Reference**: Incorporate the functional design document content as a comment in the relevant section.
+            4. **Technical Design Reference**: Include the technical design document details in a comment under its section.
+            5. **Modularity**: Structure the code to include placeholders for different functionalities derived from the SDLC state, with clear comments indicating where each functionality should be implemented.
+            6. **Python Formatting**: The generated code should follow Python syntax and best practices.
+
+            Ensure the output code is modular, well-commented, and ready for development.
+        """
+        response = self.llm.invoke(prompt)
+        next_required_input = "coming_soon" if state['design_documents']['review_status'] == "approved" else "create_design_document"
+        return {'code_generated': response.content, 'next_required_input': next_required_input, 'current_node': 'generate_code' }

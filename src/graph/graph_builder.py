@@ -24,7 +24,8 @@ class GraphBuilder:
         self.builder.add_node("auto_generate_user_stories", self.sdlc_node.auto_generate_user_stories)
         self.builder.add_node("product_owner_review_decision", self.sdlc_node.product_owner_review_decision) # Routing node
         self.builder.add_node("create_design_document", self.design_node.create_design_document)
-        #self.builder.add_node("design_review",self.design_node.design_review)
+        self.builder.add_node("design_review",self.design_node.design_review) # Routing Node
+        self.builder.add_node("generate_code", self.design_node.generate_code)
 
         # Edges
         self.builder.add_edge(START, "project_initilization")
@@ -39,19 +40,25 @@ class GraphBuilder:
                 "feedback": "auto_generate_user_stories"
             }
         )
-        self.builder.add_edge("create_design_document", END)
-        # self.builder.add_conditional_edges(
-        #     "design_review", 
-        # )
+        self.builder.add_edge("create_design_document", "design_review")
+        self.builder.add_conditional_edges(
+            "design_review", 
+            self.design_node.design_review_router,
+            {
+                "approved": "generate_code",
+                "feedback": "create_design_document"
+            }
+        )
 
+        self.builder.add_edge("generate_code", END)
         return self.builder
 
     def setup_graph(self):
         self.graph = self.build_graph()
-        return self.graph.compile(interrupt_before=['get_requirements', 'product_owner_review_decision'], checkpointer=self.memory)
+        return self.graph.compile(interrupt_before=['get_requirements', 'product_owner_review_decision', 'design_review'], checkpointer=self.memory)
     
 
 # get the graph 
 # llm = GroqLLM().get_llm()
 # graph_builder = GraphBuilder(llm)
-# graph = graph_builder.build_graph().compile()
+# graph = graph_builder.build_graph().compile(interrupt_before=['get_requirements', 'product_owner_review_decision'], checkpointer=MemorySaver())

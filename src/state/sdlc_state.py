@@ -22,6 +22,8 @@ class StartWorkflowResponse(BaseModel):
 class DesignDocument(BaseModel):
     functional: str = Field(..., description="Holds the functional design Document")
     technical: str = Field(..., description="Holds the technical design Document")
+    review_status: str = Field("", description="Indicates whether the design document has been reviwed")
+    feedback_reason: str = Field("", description="Holds the design feedback")
 
 class SDLCState(TypedDict):
     project_name: str
@@ -34,6 +36,7 @@ class SDLCState(TypedDict):
     product_decision: str
     feedback_reason: str
     design_documents: DesignDocument
+    code_generated: str
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
