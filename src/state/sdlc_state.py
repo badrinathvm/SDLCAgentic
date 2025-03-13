@@ -18,6 +18,9 @@ class StartWorkflowResponse(BaseModel):
     progress: int
     current_node: str
 
+class DesignDocument(BaseModel):
+    functional: str = Field(..., description="Holds the functional design Document")
+
 class SDLCState(TypedDict):
     project_name: str
     requirements: list[str]
@@ -28,3 +31,4 @@ class SDLCState(TypedDict):
     status: Literal["initialized", "in_progress", "completed", "error"] = "initialized"
     product_decision: str
     feedback_reasons: list[str]
+    design_documents: DesignDocument

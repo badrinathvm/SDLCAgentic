@@ -50,6 +50,7 @@ class SDLCNode:
         """
             Auto generate the user stories based on the user requirements provided
         """
+        print("----- Generate User Stories ----")
         project_name = state["project_name"]
         requirements = state["requirements"]
 
@@ -59,12 +60,13 @@ class SDLCNode:
         ]
 
         user_stories = await asyncio.gather(*tasks)
-        return {"user_stories": user_stories}
+        return {"user_stories": user_stories , 'next_required_input' : ""}
     
     def product_review_decision(self, state: SDLCState):
         """
             Reviews the product requirements and returns the decision in state
         """
+        print("----- Product Owner Review ----")
         requirements = state['requirements']
         user_stories = state['user_stories']
 
@@ -105,7 +107,7 @@ class SDLCNode:
         """
             Generates the Design document functional and technical
         """
-        print("creating design document")
+        print("----- Creating Design Document ----")
         return state
 
     
