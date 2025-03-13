@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import TypedDict, Any, Dict, Literal, Optional
+import json
 
 class UserStories(BaseModel):
     id: int = Field(..., description="The unique identifier of the user story")
@@ -31,5 +32,15 @@ class SDLCState(TypedDict):
     current_node: str = "project_initilization"
     status: Literal["initialized", "in_progress", "completed", "error"] = "initialized"
     product_decision: str
-    feedback_reasons: list[str]
+    feedback_reason: str
     design_documents: DesignDocument
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # Check if the object is any kind of Pydantic model
+        if isinstance(obj, BaseModel):
+            return obj.model_dump()
+        # Or check for specific classes if needed
+        # if isinstance(obj, UserStories) or isinstance(obj, DesignDocument):
+        #     return obj.model_dump()
+        return super().default(obj)

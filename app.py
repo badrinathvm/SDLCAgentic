@@ -78,9 +78,47 @@ async def get_project_requirements(task_id: str, request: Request):
         print(f"Event Received: {event}")
         state = event
 
-    delete_from_redis(task_id)
+    # saving the state before asking the product owner for review
+    current_state = graph.get_state(thread)
+    save_state_to_redis(task_id, current_state)
 
     return {"task_id": task_id, "data": state}
+
+@app.post("/sdlc/workflow/{task_id}/product_owner_review")
+async def product_owner_review(task_id: str, request: Request):
+    """
+        Review from the product owner
+    """
+    data = await request.json()
+
+    # getting from the user input
+    product_owner_decision = data.get('product_owner_decision','')
+    feedback_reason = data.get('feedback_reason', '')
+
+    # Get the graph instance from the app state
+    graph = app.state.graph
+
+    saved_state = get_state_from_redis(task_id)
+    if saved_state:
+        saved_state['product_decision'] = product_owner_decision
+        saved_state['feedback_reason'] = feedback_reason
+
+        # update the graph with thread
+        thread = {"configurable": {"thread_id": task_id}}
+        graph.update_state(thread, saved_state, as_node="product_owner_review_decision")
+
+        # Resume the graph
+        state = None
+        async for event in graph.astream(None, thread, stream_mode="values"):
+            print(f"Event Received: {event}")
+            state = event
+
+         # saving the state before asking the product owner for review
+        current_state = graph.get_state(thread)
+        save_state_to_redis(task_id, current_state)
+        
+    #delete_from_redis(task_id)
+    return {"task_id": task_id, "data": state} if saved_state else {"task_id": task_id}
 
 
 if __name__ == "__main__":

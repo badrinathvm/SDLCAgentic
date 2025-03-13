@@ -2,7 +2,7 @@ import redis
 import json
 from typing import Optional
 
-from src.state.sdlc_state import SDLCState
+from src.state.sdlc_state import CustomEncoder, SDLCState
 
 # Initialize RedisCheckpoint
 redis_client = redis.Redis(
@@ -13,7 +13,7 @@ redis_client = redis.Redis(
 
 def save_state_to_redis(task_id: str, state: SDLCState):
     """Save the state to Redis."""
-    state = json.dumps(state)
+    state = json.dumps(state, cls=CustomEncoder)
     redis_client.set(task_id, state)
 
     # Set expiration for 24 hours

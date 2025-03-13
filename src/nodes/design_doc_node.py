@@ -39,6 +39,8 @@ class DesignNode:
 
         return {
             **state,
+            "current_node": "create_design_document",
+            "next_required_input": "design_review",
             "design_documents": design_documents,
             "technical_documents": technical_documents
         }
@@ -122,7 +124,6 @@ class DesignNode:
             response = self.llm.invoke(prompt)
             return response.content
         
-
     def _format_list(self, items):
         """Format list items nicely for prompt"""
         return '\n'.join([f"- {item}" for item in items])
@@ -138,3 +139,10 @@ class DesignNode:
                 # Handle dictionary
                 formatted_stories.append(f"- ID: {story.get('id', 'N/A')}\n  Title: {story.get('title', 'N/A')}\n  Description: {story.get('description', 'N/A')}")
         return '\n'.join(formatted_stories)
+    
+
+    def design_review(self, state: SDLCState):
+        """
+            Performs the Design review
+        """
+        pass
