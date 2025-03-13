@@ -66,10 +66,34 @@ class SDLCNode:
             Reviews the product requirements and returns the decision in state
         """
         requirements = state['requirements']
-        decision = "approved" if len(requirements) >= 4 else "feedback"
+        user_stories = state['user_stories']
+
+        # collect any issues
+        decision = "approved"
+        issues = []
+
+        if len(requirements) < 3:
+            decision = "feedback"
+            issues.append("In suffcient number of requirements. Need atleast 3 core requirements")
+
+        # check for the title and description lengths
+        for story in user_stories:
+            story_id = getattr(story, 'id', 'unknown')
+            story_title = getattr(story, 'title', '')
+            story_description = getattr(story, 'description', '')
+            if not hasattr(story, 'title') or len(story_title) < 10:
+                decision = 'feedback'
+                issues.append(f"User story {story_id} has an insufficient title")
+
+            if not hasattr(story, 'description') or len(story_description) < 30:
+                decision = 'feedback'
+                issues.append(f"User story {story_id} needs a more detailed description")
         
         # Return a dictionary with state updates
-        return {"product_decision": decision}
+        return {
+                "product_decision": decision, 
+                "feedback_reasons": issues if issues else ["All requirements and user stories meets quality standards"]
+            }
     
     def product_decision_router(self, state: SDLCState):
         """
