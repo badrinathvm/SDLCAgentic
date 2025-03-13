@@ -26,57 +26,102 @@ class DesignNode:
             user_stories=user_stories
         )
 
+        technical_documents = self.generate_technical_design(
+            project_name=project_name,
+            requirements=requirements,
+            user_stories=user_stories
+        )
+
         design_documents = DesignDocument(
-            functional=functional_documents
+            functional=functional_documents,
+            technical = technical_documents
         )
 
         return {
             **state,
-            "design_documents": design_documents
+            "design_documents": design_documents,
+            "technical_documents": technical_documents
         }
     
     def generate_functional_design(self, project_name, requirements, user_stories):
         """
         Helper method to generate functional design document
         """
+        print("----- Creating Functional Design Document ----")
         prompt = f"""
-            Create a comprehensive functional design document for {project_name} in Markdown format. The document should adhere to proper Markdown syntax, including appropriate headers (using # for main titles, ## for sections, etc.), bullet points, tables, and code blocks where applicable.
-
-            The document should include the following sections with proper formatting:
-                1.	Introduction and Purpose
-            Provide a brief introduction and the purpose of the system or project.
-                2.	Project Scope
-            Define the scope of the project, including its boundaries, goals, and features.
-                3.	User Roles and Permissions
-            List and describe the roles of users in the system and the corresponding permissions each role has.
-                4.	Functional Requirements Breakdown
-            Break down the functional requirements of the system with proper bullet points or sub-sections.
-                5.	User Interface Design Guidelines
-            Describe the UI design principles, including layout, accessibility, and responsive design.
-                6.	Business Process Flows
-            Provide any necessary business process flow diagrams or descriptions. Use Mermaid syntax for flowcharts if applicable.
-                7.	Data Entities and Relationships
-            List the entities (such as Users, Products, Orders, etc.) and their relationships in the system, including a table for clarity.
-                8.	Validation Rules
-            Specify the validation rules for key data inputs or processes in the system.
-                9.	Reporting Requirements
-            Define any reporting needs (e.g., sales reports, user analytics, etc.), using bullet points to list them.
-                10.	Integration Points
-            Detail the external systems or APIs that the project will integrate with, along with their purpose and any requirements.
-
-            The document should also include the following sections:
-                •	Requirements:
-                •	Format the requirements as a list of bullet points: {self._format_list(requirements)}.
-                •	User Stories:
-                •	Format the user stories as a list of bullet points: {self._format_user_stories(user_stories)}.
-
-            Ensure that the document maintains proper Markdown formatting throughout, with consistent use of headings, subheadings, bullet points, tables, and code blocks. Additionally, ensure that any technical details are presented in a clear, structured manner, using the appropriate Markdown syntax.
+            Create a comprehensive functional design document for {project_name} in Markdown format.
+    
+            The document should use proper Markdown syntax with headers (# for main titles, ## for sections, etc.), 
+            bullet points, tables, and code blocks where appropriate.
+            
+            Requirements:
+            {self._format_list(requirements)}
+            
+            User Stories:
+            {self._format_user_stories(user_stories)}
+            
+            The functional design document should include the following sections, each with proper Markdown formatting:
+            
+            # Functional Design Document: {project_name}
+            
+            ## 1. Introduction and Purpose
+            ## 2. Project Scope
+            ## 3. User Roles and Permissions
+            ## 4. Functional Requirements Breakdown
+            ## 5. User Interface Design Guidelines
+            ## 6. Business Process Flows
+            ## 7. Data Entities and Relationships
+            ## 8. Validation Rules
+            ## 9. Reporting Requirements
+            ## 10. Integration Points
+            
+            Make sure to maintain proper Markdown formatting throughout the document.
         """
         # invoke the llm
         response = self.llm.invoke(prompt)
 
         # content = self.fix_markdown(content=response.content)
         return response.content    
+    
+    def generate_technical_design(self, project_name, requirements, user_stories):
+            """
+                Helper method to generate technical design document in Markdown format
+            """
+            print("----- Creating Technical Design Document ----")
+            prompt = f"""
+                Create a comprehensive technical design document for {project_name} in Markdown format.
+                
+                The document should use proper Markdown syntax with headers (# for main titles, ## for sections, etc.), 
+                bullet points, tables, code blocks, and diagrams described in text form where appropriate.
+                
+                Requirements:
+                {self._format_list(requirements)}
+                
+                User Stories:
+                {self._format_user_stories(user_stories)}
+                
+                The technical design document should include the following sections, each with proper Markdown formatting:
+                
+                # Technical Design Document: {project_name}
+
+                 ## 1. System Architecture
+                ## 2. Technology Stack and Justification
+                ## 3. Database Schema
+                ## 4. API Specifications
+                ## 5. Security Considerations
+                ## 6. Performance Considerations
+                ## 7. Scalability Approach
+                ## 8. Deployment Strategy
+                ## 9. Third-party Integrations
+                ## 10. Development, Testing, and Deployment Environments
+                
+                For any code examples, use ```language-name to specify the programming language.
+                For database schemas, represent tables and relationships using Markdown tables.
+                Make sure to maintain proper Markdown formatting throughout the document.
+            """
+            response = self.llm.invoke(prompt)
+            return response.content
+        
 
     def _format_list(self, items):
         """Format list items nicely for prompt"""

@@ -20,6 +20,7 @@ class StartWorkflowResponse(BaseModel):
 
 class DesignDocument(BaseModel):
     functional: str = Field(..., description="Holds the functional design Document")
+    technical: str = Field(..., description="Holds the technical design Document")
 
 class SDLCState(TypedDict):
     project_name: str
