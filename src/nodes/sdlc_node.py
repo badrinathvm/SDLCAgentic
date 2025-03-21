@@ -9,7 +9,7 @@ class SDLCNode:
     def __init__(self, llm):
         self.llm = llm 
 
-    
+
     def project_initilization(self, state: SDLCState):
         """
             Performs the project initilazation

@@ -58,10 +58,14 @@ async def get_project_requirements(task_id: str, request: Request):
         Gets the project requirements
     """
     data = await request.json()
-    requirements = data.get('requirements', '')
+    task = data.get('task', '')
 
      # Get the graph instance from the app state
     graph = app.state.graph
+
+     # TODO:: we can do in much better way.
+    requirements = split_task_to_requirements(task_statement=task)
+    #requirements = data.get('requirements', '')
 
     saved_state = get_state_from_redis(task_id)
     if saved_state:
@@ -157,6 +161,45 @@ async def design_review(task_id: str, request: Request):
 
     return {"task_id": task_id, "data": design_state} if saved_state else {"task_id": task_id}
     
+def split_task_to_requirements(task_statement: str) -> list[str]:
+        """
+        Extracts clear and concise requirements from a given task statement.
+
+        Args:
+            task_statement (str): The input task statement.
+
+        Returns:
+            list[str]: A list of extracted requirements as strings.
+        """
+        # Prompt for the LLM
+        prompt = f"""
+        Task: Extract clear and concise requirements from the following statement. Each requirement should be a standalone actionable point. Do not include bullet points in the output.
+
+        Example Input:
+            Write an e-commerce application which should allow users to choose products from a catalog, add payments, and submit the order.
+
+        Example Output:
+        Allow users to choose products from a catalog.
+        Enable users to add payments.
+        Provide functionality for users to submit the order.
+
+        Input Statement:
+        {task_statement}
+
+        Output:
+            """
+        # Format the system message
+        system_message = prompt
+        try:
+            # Invoke the LLM to process the prompt
+            response = app.state.llm.invoke(system_message)
+            # Split the response into individual requirements
+            requirements = [line.strip() for line in response.content.splitlines() if line.strip()]
+            return requirements
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return []
+
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

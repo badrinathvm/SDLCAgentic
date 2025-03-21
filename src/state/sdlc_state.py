@@ -27,6 +27,7 @@ class DesignDocument(BaseModel):
 
 class SDLCState(TypedDict):
     project_name: str
+    task: str
     requirements: list[str]
     user_stories: list[UserStories]
     progress: int
