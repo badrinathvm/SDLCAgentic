@@ -195,5 +195,17 @@ class DesignNode:
             Ensure the output code is modular, well-commented, and ready for development.
         """
         response = self.llm.invoke(prompt)
-        next_required_input = "coming_soon" if state['design_documents']['review_status'] == "approved" else "create_design_document"
+        next_required_input = "code_review" if state['design_documents']['review_status'] == "approved" else "create_design_document"
         return {'code_generated': response.content, 'next_required_input': next_required_input, 'current_node': 'generate_code' }
+    
+    def code_review(self, state: SDLCState):
+        """
+            Perform the code review for the generated code 
+        """
+        print("----- Performing the code review ----")
+        prompt = f"""
+            You are a coding expert. Peform the Code review and recommendations for the {state['code_generated']}
+        """
+        response = self.llm.invoke(prompt)
+        next_required_input = "coming_soon" if state['design_documents']['review_status'] else "fix_code_review"
+        return {'code_review': response.content, 'next_required_input': next_required_input, 'current_node': 'code_review' }

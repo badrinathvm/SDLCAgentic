@@ -26,6 +26,7 @@ class GraphBuilder:
         self.builder.add_node("create_design_document", self.design_node.create_design_document)
         self.builder.add_node("design_review",self.design_node.design_review) # Routing Node
         self.builder.add_node("generate_code", self.design_node.generate_code)
+        self.builder.add_node("perform_code_review", self.design_node.code_review)
 
         # Edges
         self.builder.add_edge(START, "project_initilization")
@@ -50,7 +51,8 @@ class GraphBuilder:
             }
         )
 
-        self.builder.add_edge("generate_code", END)
+        self.builder.add_edge("generate_code", "perform_code_review")
+        self.builder.add_edge("perform_code_review", END)
         return self.builder
 
     def setup_graph(self):

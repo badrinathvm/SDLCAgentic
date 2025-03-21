@@ -38,6 +38,7 @@ class SDLCState(TypedDict):
     feedback_reason: str
     design_documents: DesignDocument
     code_generated: str
+    code_review: str
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
