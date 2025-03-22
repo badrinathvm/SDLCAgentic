@@ -26,7 +26,8 @@ class GraphBuilder:
         self.builder.add_node("create_design_document", self.design_node.create_design_document)
         self.builder.add_node("design_review",self.design_node.design_review) # Routing Node
         self.builder.add_node("generate_code", self.design_node.generate_code)
-        self.builder.add_node("perform_code_review", self.design_node.code_review)
+        self.builder.add_node("code_review", self.design_node.code_review) # Routing Node
+        self.builder.add_node("security_review", self.design_node.security_review)
 
         # Edges
         self.builder.add_edge(START, "project_initilization")
@@ -51,16 +52,33 @@ class GraphBuilder:
             }
         )
 
-        self.builder.add_edge("generate_code", "perform_code_review")
-        self.builder.add_edge("perform_code_review", END)
+        self.builder.add_edge("generate_code", "code_review")
+        self.builder.add_conditional_edges(
+            "code_review",
+            self.design_node.code_review_router,
+            {
+                "approved": "security_review",
+                "feedback": "generate_code"
+            }
+        )
+
+        self.builder.add_edge("security_review", END)
+
         return self.builder
 
     def setup_graph(self):
         self.graph = self.build_graph()
-        return self.graph.compile(interrupt_before=['get_requirements', 'product_owner_review_decision', 'design_review'], checkpointer=self.memory)
+        return self.graph.compile(
+            interrupt_before=[
+                'get_requirements', 
+                'product_owner_review_decision', 
+                'design_review',
+                'code_review'
+            ], checkpointer=self.memory
+        )
     
 
 # get the graph 
 # llm = GroqLLM().get_llm()
 # graph_builder = GraphBuilder(llm)
-# graph = graph_builder.build_graph().compile(interrupt_before=['get_requirements', 'product_owner_review_decision'], checkpointer=MemorySaver())
+# graph = graph_builder.build_graph().compile(interrupt_before=['get_requirements', 'product_owner_review_decision', 'code_review'], checkpointer=MemorySaver())

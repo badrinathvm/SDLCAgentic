@@ -196,16 +196,59 @@ class DesignNode:
         """
         response = self.llm.invoke(prompt)
         next_required_input = "code_review" if state['design_documents']['review_status'] == "approved" else "create_design_document"
-        return {'code_generated': response.content, 'next_required_input': next_required_input, 'current_node': 'generate_code' }
+        code_review_comments = self.get_code_review_comments(code=response.content)
+        return {
+                'code_generated': response.content, 
+                'next_required_input': next_required_input, 
+                'current_node': 'generate_code',
+                'code_review_comments': code_review_comments
+            }
     
+    def get_code_review_comments(self, code: str):
+        """
+        Generate code review comments for the provided code
+        """
+        print("----- Generating code review comments ----")
+        
+        # Create a prompt for the LLM to review the code
+        prompt = f"""
+            You are a coding expert. Please review the following code and provide detailed feedback:
+            ```
+            {code}
+            ```
+            Focus on:
+            1. Code quality and best practices
+            2. Potential bugs or edge cases
+            3. Performance considerations
+            4. Security concerns
+            
+            End your review with an explicit APPROVED or NEEDS_FEEDBACK status.
+        """
+        
+        # Get the review from the LLM
+        response = self.llm.invoke(prompt)
+        review_comments = response.content
+        return review_comments
+        
+
     def code_review(self, state: SDLCState):
         """
-            Perform the code review for the generated code 
+            Performs the Design review
         """
-        print("----- Performing the code review ----")
-        prompt = f"""
-            You are a coding expert. Peform the Code review and recommendations for the {state['code_generated']}
+        pass
+
+    def code_review_router(self, state: SDLCState):
         """
-        response = self.llm.invoke(prompt)
-        next_required_input = "coming_soon" if state['design_documents']['review_status'] else "fix_code_review"
-        return {'code_review': response.content, 'next_required_input': next_required_input, 'current_node': 'code_review' }
+            Evaluates design review is required or not.
+        """
+        return state['code_review_status']
+    
+    def security_review(self, state: SDLCState):
+        """
+
+        """
+        return {
+            **state,
+            "current_node": "code_review",
+            "next_required_input": "security_review"
+        }
