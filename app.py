@@ -180,6 +180,7 @@ async def code_review(task_id: str, request: Request):
     saved_state = get_state_from_redis(task_id=task_id)
     if saved_state:
         saved_state['code_review_status'] = code_review_decision
+        saved_state['code_review_feedback'] = code_review_feedback
 
         # update the graph with thread
         thread = {"configurable": {"thread_id": task_id}}

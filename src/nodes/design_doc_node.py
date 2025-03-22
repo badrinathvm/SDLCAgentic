@@ -245,10 +245,32 @@ class DesignNode:
     
     def security_review(self, state: SDLCState):
         """
-
+            Performs security review of the code generated
         """
+         # Get the generated code from the state
+        code_generated = state.get('code_generated', '')
+
+         # Create a prompt for the LLM to review the code for security concerns
+        prompt = f"""
+            You are a security expert. Please review the following Python code for potential security vulnerabilities:
+            ```
+            {code_generated}
+            ```
+            Focus on:
+            1. Identifying potential security risks (e.g., SQL injection, XSS, insecure data handling).
+            2. Providing recommendations to mitigate these risks.
+            3. Highlighting any best practices that are missing.
+
+            End your review with an explicit APPROVED or NEEDS_FEEDBACK status.
+        """
+
+         # Invoke the LLM to perform the security review
+        response = self.llm.invoke(prompt)
+        security_review_feedback = response.content
+
         return {
             **state,
             "current_node": "code_review",
-            "next_required_input": "security_review"
+            "next_required_input": "security_review",
+            "security_review_feedback": security_review_feedback
         }
