@@ -194,6 +194,42 @@ async def code_review(task_id: str, request: Request):
 
     return {"task_id": task_id, "data": code_review_state } if saved_state else {"task_id": task_id}
 
+
+@app.post("/sdlc/workflow/{task_id}/security_review")
+async def code_review(task_id: str, request: Request):
+    """
+        Performs the security review
+    """
+    data = await request.json()
+
+    # Getting the desing review input from the user
+    security_review_decision = data.get('review_status','')
+    security_review_feedback = data.get('feedback_reason', '')
+
+     # Get the graph instance from the app state
+    graph = app.state.graph
+
+     # fetch the saved state from the redis cache
+    saved_state = get_state_from_redis(task_id=task_id)
+    if saved_state:
+        saved_state['security_review_status'] = security_review_decision
+        saved_state['security_review_feedback'] = security_review_feedback
+
+         # update the graph with thread
+        thread = {"configurable": {"thread_id": task_id}}
+        graph.update_state(thread, saved_state, as_node="security_review")
+
+         # Resume the graph stream
+        security_review_state = None
+        async for event in graph.astream(None, thread, stream_mode="values"):
+            print(f"Security review Event Received: {event}")
+            security_review_state = event
+    
+    return {"task_id": task_id, "data": security_review_state } if saved_state else {"task_id": task_id}
+
+    
+
+
     
 def split_task_to_requirements(task_statement: str) -> list[str]:
         """

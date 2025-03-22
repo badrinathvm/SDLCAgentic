@@ -27,7 +27,9 @@ class GraphBuilder:
         self.builder.add_node("design_review",self.design_node.design_review) # Routing Node
         self.builder.add_node("generate_code", self.design_node.generate_code)
         self.builder.add_node("code_review", self.design_node.code_review) # Routing Node
-        self.builder.add_node("security_review", self.design_node.security_review)
+        self.builder.add_node("generate_security_recommendations", self.design_node.security_recommendations)
+        self.builder.add_node("security_review", self.design_node.security_review) # Routing Node
+        self.builder.add_node("generate_test_cases", self.design_node.generate_test_cases)
 
         # Edges
         self.builder.add_edge(START, "project_initilization")
@@ -57,11 +59,20 @@ class GraphBuilder:
             "code_review",
             self.design_node.code_review_router,
             {
-                "approved": "security_review",
+                "approved": "generate_security_recommendations",
                 "feedback": "generate_code"
             }
         )
 
+        self.builder.add_edge("generate_security_recommendations", "security_review")
+        self.builder.add_conditional_edges(
+            "security_review",
+            self.design_node.security_review_router,
+            {
+                "approved": "generate_test_cases",
+                "feedback": "generate_code"
+            }
+        )
         self.builder.add_edge("security_review", END)
 
         return self.builder
@@ -73,7 +84,8 @@ class GraphBuilder:
                 'get_requirements', 
                 'product_owner_review_decision', 
                 'design_review',
-                'code_review'
+                'code_review',
+                'security_review'
             ], checkpointer=self.memory
         )
     

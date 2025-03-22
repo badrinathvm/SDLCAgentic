@@ -40,7 +40,10 @@ class SDLCState(TypedDict):
     code_generated: str
     code_review_comments: str
     code_review_status: str
+    security_review_comments: str
+    security_review_status: str
     security_review_feedback: str
+    test_cases: str
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
