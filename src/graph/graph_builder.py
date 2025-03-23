@@ -30,6 +30,8 @@ class GraphBuilder:
         self.builder.add_node("generate_security_recommendations", self.design_node.security_recommendations)
         self.builder.add_node("security_review", self.design_node.security_review) # Routing Node
         self.builder.add_node("generate_test_cases", self.design_node.generate_test_cases)
+        self.builder.add_node("test_cases_review", self.design_node.test_cases_review) # Routing Node
+        self.builder.add_node("qa_testing", self.design_node.qa_testing)
 
         # Edges
         self.builder.add_edge(START, "project_initilization")
@@ -73,7 +75,18 @@ class GraphBuilder:
                 "feedback": "generate_code"
             }
         )
-        self.builder.add_edge("security_review", END)
+
+        self.builder.add_edge("generate_test_cases", "test_cases_review")
+        self.builder.add_conditional_edges(
+            "test_cases_review",
+            self.design_node.test_cases_review_router,
+            {
+                "approved": "qa_testing",
+                "feedback": "generate_test_cases"
+            }
+        )
+
+        self.builder.add_edge("test_cases_review", END)
 
         return self.builder
 
@@ -85,7 +98,8 @@ class GraphBuilder:
                 'product_owner_review_decision', 
                 'design_review',
                 'code_review',
-                'security_review'
+                'security_review',
+                'test_cases_review'
             ], checkpointer=self.memory
         )
     
@@ -93,4 +107,12 @@ class GraphBuilder:
 # get the graph 
 # llm = GroqLLM().get_llm()
 # graph_builder = GraphBuilder(llm)
-# graph = graph_builder.build_graph().compile(interrupt_before=['get_requirements', 'product_owner_review_decision', 'code_review'], checkpointer=MemorySaver())
+# graph = graph_builder.build_graph().compile(
+#     interrupt_before=[
+#         'get_requirements', 
+#         'product_owner_review_decision', 
+#         'code_review',
+#         'security_review',
+#         'test_cases_review'
+#         ], checkpointer=MemorySaver()
+#     )

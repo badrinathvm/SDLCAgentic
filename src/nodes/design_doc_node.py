@@ -2,6 +2,7 @@
 from src.llm.openai_llm import OpenAILLM
 from src.state.sdlc_state import DesignDocument, SDLCState
 from langchain.agents import Tool
+from datetime import datetime
 import re
 import os
 
@@ -326,6 +327,71 @@ class DesignNode:
         return {
             **state,
             "current_node": "generate_test_cases",
-            "next_required_input": "test_review",
+            "next_required_input": "test_cases_review",
             "test_cases": test_cases,
+        }
+    
+    def test_cases_review(self, state: SDLCState):
+        """
+            Process the human decision from the UI
+        """
+        print("----- Test cases Review -----")
+        # Mark that human input is required.
+        # return {
+        #     "human_input_required": True,
+        #     "timestamp": datetime.now().isoformat()
+        # }
+        pass
+    
+    def test_cases_review_router(self, state: SDLCState):
+        """
+            Evaluates tests cases review is required or not.
+        """
+        return state['qa_testing_status']
+    
+    def qa_testing(self, state: SDLCState):
+        """
+            Performs QA testing based on the generated code and test cases
+        """
+        print("----- Performing QA Testing ----")
+        # Get the generated code and test cases from the state
+        code_generated = state.get('code_generated', '')
+        test_cases = state.get('test_cases', '')
+
+        # Create a prompt for the LLM to simulate running the test cases
+        prompt = f"""
+            You are a QA testing expert. Based on the following Python code and test cases, simulate running the test cases and provide feedback:
+            
+            ### Code:
+            ```
+            {code_generated}
+            ```
+
+            ### Test Cases:
+            ```
+            {test_cases}
+            ```
+
+            Focus on:
+            1. Identifying which test cases pass and which fail.
+            2. Providing detailed feedback for any failed test cases, including the reason for failure.
+            3. Suggesting improvements to the code or test cases if necessary.
+
+            Provide the results in the following format:
+            - Test Case ID: [ID]
+            Status: [Pass/Fail]
+            Feedback: [Detailed feedback if failed]
+        """
+
+        # Invoke the LLM to simulate QA testing
+        response = self.llm.invoke(prompt)
+        qa_testing_comments = response.content
+
+        # Update the state with the QA testing results
+        return {
+            **state,
+            "current_node": "qa_testing",
+            "next_required_input": "deployment" if state['qa_testing_status'] == "approved" else "generate_test_cases",
+            "qa_testing_status": state['qa_testing_status'],
+            "qa_testing_comments": qa_testing_comments
         }

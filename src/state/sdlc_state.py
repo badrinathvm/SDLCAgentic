@@ -44,6 +44,9 @@ class SDLCState(TypedDict):
     security_review_status: str
     security_review_feedback: str
     test_cases: str
+    qa_testing_status: str
+    qa_testing_comments: str
+    qa_testing_feedback: str
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
