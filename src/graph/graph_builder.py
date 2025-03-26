@@ -32,6 +32,8 @@ class GraphBuilder:
         self.builder.add_node("generate_test_cases", self.design_node.generate_test_cases)
         self.builder.add_node("test_cases_review", self.design_node.test_cases_review) # Routing Node
         self.builder.add_node("qa_testing", self.design_node.qa_testing)
+        self.builder.add_node("deployment", self.design_node.deployment)
+        self.builder.add_node("qa_testing_review", self.design_node.qa_testing_review) # Routing Node
 
         # Edges
         self.builder.add_edge(START, "project_initilization")
@@ -85,8 +87,16 @@ class GraphBuilder:
                 "feedback": "generate_test_cases"
             }
         )
-
-        self.builder.add_edge("test_cases_review", END)
+        self.builder.add_edge("qa_testing", "qa_testing_review")
+        self.builder.add_conditional_edges(
+            "qa_testing_review",
+            self.design_node.qa_testing_review_router,
+            {
+                "approved": "deployment",
+                "feedback": "generate_code"
+            }
+        )
+        self.builder.add_edge("deployment", END)
 
         return self.builder
 
@@ -99,7 +109,8 @@ class GraphBuilder:
                 'design_review',
                 'code_review',
                 'security_review',
-                'test_cases_review'
+                'test_cases_review',
+                'qa_testing_review'
             ], checkpointer=self.memory
         )
     

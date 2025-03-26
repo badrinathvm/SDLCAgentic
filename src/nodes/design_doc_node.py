@@ -347,7 +347,7 @@ class DesignNode:
         """
             Evaluates tests cases review is required or not.
         """
-        return state['qa_testing_status']
+        return state['test_case_review_status']
     
     def qa_testing(self, state: SDLCState):
         """
@@ -391,7 +391,73 @@ class DesignNode:
         return {
             **state,
             "current_node": "qa_testing",
-            "next_required_input": "deployment" if state['qa_testing_status'] == "approved" else "generate_test_cases",
-            "qa_testing_status": state['qa_testing_status'],
+            "next_required_input": "deployment" if state['test_case_review_status'] == "approved" else "generate_test_cases",
+            "qa_testing_status": state['test_case_review_status'],
             "qa_testing_comments": qa_testing_comments
         }
+    
+    def deployment(self, state: SDLCState):
+        """
+            Performs teh deployment
+        """
+        print("----- Performing Deployment ----")
+
+        # Get the generated code and QA testing status from the state
+        code_generated = state.get('code_generated', '')
+        qa_testing_status = state.get('qa_testing_status', '')
+
+        # Create a prompt for the LLM to simulate deployment
+        prompt = f"""
+            You are a DevOps expert. Based on the following Python code, simulate the deployment process and provide feedback:
+            
+            ### Code:
+            ```
+            {code_generated}
+            ```
+
+            Focus on:
+            1. Identifying potential deployment issues (e.g., missing dependencies, configuration errors).
+            2. Providing recommendations to resolve any issues.
+            3. Confirming whether the deployment is successful or needs further action.
+
+            Provide the results in the following format:
+            - Deployment Status: [Success/Failed]
+            - Feedback: [Detailed feedback on the deployment process]
+        """
+
+        # Invoke the LLM to simulate deployment
+        response = self.llm.invoke(prompt)
+        deployment_feedback = response.content
+
+         # Determine the deployment status based on the feedback
+        if "SUCCESS" in deployment_feedback.upper():
+            deployment_status = "success"
+        else:
+            deployment_status = "failed"
+
+        # Update the state with the deployment results
+        return {
+            **state,
+            "current_node": "deployment",
+            "next_required_input": "end" if deployment_status == "success" else "qa_testing",
+            "deployment_status": deployment_status,
+            "deployment_feedback": deployment_feedback
+        }
+    
+    def qa_testing_review(self, state: SDLCState):
+        """
+            Process the human decision from the UI
+        """
+        print("----- Test cases Review -----")
+        # Mark that human input is required.
+        # return {
+        #     "human_input_required": True,
+        #     "timestamp": datetime.now().isoformat()
+        # }
+        pass
+
+    def qa_testing_review_router(self, state: SDLCState):
+        """
+            Evaluates tests cases review is required or not.
+        """
+        return state['qa_testing_status']

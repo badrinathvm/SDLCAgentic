@@ -20,7 +20,7 @@ def save_state_to_redis(task_id: str, state: SDLCState):
     redis_client.expire(task_id, 86400)
 
 def get_state_from_redis(task_id: str) -> Optional[SDLCState]:
-    """ Retrieves the statwe from redis """
+    """ Retrieves the state from redis """
     state_json = redis_client.get(task_id)
     if not state_json:
         return None
