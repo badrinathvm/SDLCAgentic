@@ -93,224 +93,67 @@ async def product_owner_review(task_id: str, request: Request):
     """
         Review from the product owner
     """
-    data = await request.json()
-
-    # getting from the user input
-    product_owner_decision = data.get('product_owner_decision','')
-    feedback_reason = data.get('feedback_reason', '')
-
-    # Get the graph instance from the app state
-    graph = app.state.graph
-
-    saved_state = get_state_from_redis(task_id)
-    if saved_state:
-        saved_state['product_decision'] = product_owner_decision
-        saved_state['feedback_reason'] = feedback_reason
-
-        # update the graph with thread
-        thread = {"configurable": {"thread_id": task_id}}
-        graph.update_state(thread, saved_state, as_node="product_owner_review_decision")
-
-        # Resume the graph
-        state = None
-        async for event in graph.astream(None, thread, stream_mode="values"):
-            print(f"Event Received: {event}")
-            state = event
-
-         # saving the state before asking the product owner for review
-        current_state = graph.get_state(thread)
-        save_state_to_redis(task_id, current_state)
-        
-    #delete_from_redis(task_id)
-    return {"task_id": task_id, "data": state} if saved_state else {"task_id": task_id}
-
+    return await generic_workflow_review(
+        task_id, 
+        request, 
+        review_type='product_owner'
+    )
 
 @app.post("/sdlc/workflow/{task_id}/design_review")
 async def design_review(task_id: str, request: Request):
     """
-        Performs the design review
+    Performs the design review
     """
-    data = await request.json()
-
-    # Getting the desing review input from the user
-    design_review_decision = data.get('review_status','')
-    design_feedback = data.get('feedback_reason', '')
-
-    # Get the graph instance from the app state
-    graph = app.state.graph
-
-    # fetch the saved state from the redis cache
-    saved_state = get_state_from_redis(task_id=task_id)
-    if saved_state:
-        saved_state['design_documents']['review_status'] = design_review_decision
-        saved_state['design_documents']['feedback_reason'] = design_feedback
-
-        # update the graph with thread
-        thread = {"configurable": {"thread_id": task_id}}
-        graph.update_state(thread, saved_state, as_node="design_review")
-
-        # Resume the graph stream
-        design_state = None
-        async for event in graph.astream(None, thread, stream_mode="values"):
-            print(f"Design review Event Received: {event}")
-            design_state = event
-        
-          # saving the state before asking the product owner for review
-        current_state = graph.get_state(thread)
-        save_state_to_redis(task_id, current_state)
-
-    return {"task_id": task_id, "data": design_state} if saved_state else {"task_id": task_id}
-
+    return await generic_workflow_review(
+        task_id, 
+        request, 
+        review_type='design'
+    )
 
 @app.post("/sdlc/workflow/{task_id}/code_review")
 async def code_review(task_id: str, request: Request):
     """
         Performs the design review
     """
-    data = await request.json()
-
-    # Getting the desing review input from the user
-    code_review_decision = data.get('review_status','')
-    code_review_feedback = data.get('feedback_reason', '')
-
-    # Get the graph instance from the app state
-    graph = app.state.graph
-
-    # fetch the saved state from the redis cache
-    saved_state = get_state_from_redis(task_id=task_id)
-    if saved_state:
-        saved_state['code_review_status'] = code_review_decision
-        saved_state['code_review_feedback'] = code_review_feedback
-
-        # update the graph with thread
-        thread = {"configurable": {"thread_id": task_id}}
-        graph.update_state(thread, saved_state, as_node="code_review")
-
-        # Resume the graph stream
-        code_review_state = None
-        async for event in graph.astream(None, thread, stream_mode="values"):
-            print(f"Code review Event Received: {event}")
-            code_review_state = event
-
-          # saving the state before asking the product owner for review
-        current_state = graph.get_state(thread)
-        save_state_to_redis(task_id, current_state)
-
-    return {"task_id": task_id, "data": code_review_state } if saved_state else {"task_id": task_id}
-
+    return await generic_workflow_review(
+        task_id, 
+        request, 
+        review_type='code'
+    )
 
 @app.post("/sdlc/workflow/{task_id}/security_review")
 async def security_review(task_id: str, request: Request):
     """
         Performs the security review
     """
-    data = await request.json()
-
-    # Getting the design review input from the user
-    security_review_decision = data.get('review_status','')
-    security_review_feedback = data.get('feedback_reason', '')
-
-    # Get the graph instance from the app state
-    graph = app.state.graph
-
-    # Fetch the saved state from the redis cache
-    saved_state = get_state_from_redis(task_id=task_id)
-    if saved_state:
-        saved_state['security_review_status'] = security_review_decision
-        saved_state['security_review_feedback'] = security_review_feedback
-
-         # update the graph with thread
-        thread = {"configurable": {"thread_id": task_id}}
-        graph.update_state(thread, saved_state, as_node="security_review")
-
-         # Resume the graph stream
-        security_review_state = None
-        async for event in graph.astream(None, thread, stream_mode="values"):
-            print(f"Security review Event Received: {event}")
-            security_review_state = event
-        
-          # saving the state before asking the product owner for review
-        current_state = graph.get_state(thread)
-        save_state_to_redis(task_id, current_state)
-    
-    return {"task_id": task_id, "data": security_review_state } if saved_state else {"task_id": task_id}
+    return await generic_workflow_review(
+        task_id, 
+        request, 
+        review_type='security'
+    )
 
 @app.post("/sdlc/workflow/{task_id}/test_cases_review")
 async def test_cases_review(task_id: str, request: Request):
     """
         Performs the security review
     """
-    data = await request.json()
-
-    # Getting the desing review input from the user
-    test_cases_review_decision = data.get('review_status','')
-    test_cases_review_feedback = data.get('feedback_reason', '')
-
-     # Get the graph instance from the app state
-    graph = app.state.graph
-
-    # fetch the saved state from the redis cache
-    saved_state = get_state_from_redis(task_id=task_id)
-    if saved_state:
-        saved_state['test_case_review_status'] = test_cases_review_decision
-        saved_state['test_case_review_feedback'] = test_cases_review_feedback
-
-         # update the graph with thread
-        thread = {"configurable": {"thread_id": task_id}}
-        graph.update_state(thread, saved_state, as_node="test_cases_review")
-
-         # Resume the graph stream
-        test_cases_review_state = None
-        async for event in graph.astream(None, thread, stream_mode="values"):
-            print(f"Security review Event Received: {event}")
-            test_cases_review_state = event
-        
-          # saving the state before asking the product owner for review
-        current_state = graph.get_state(thread)
-        save_state_to_redis(task_id, current_state)
-
-    return {"task_id": task_id, "data": test_cases_review_state } if saved_state else {"task_id": task_id}
+    return await generic_workflow_review(
+        task_id, 
+        request, 
+        review_type='testcase'
+    )
 
 @app.post("/sdlc/workflow/{task_id}/qa_testing_review")
 async def qa_testing_review(task_id: str, request: Request):
     """
         Performs the qa testing review
     """
-    data = await request.json()
+    return await generic_workflow_review(
+        task_id, 
+        request, 
+        review_type='qa'
+    )
 
-    # Getting the desing review input from the user
-    qa_testing_review_decision = data.get('review_status','')
-    qa_testing_review_feedback = data.get('feedback_reason', '')
-
-    # Get the graph instance from the app state
-    graph = app.state.graph
-
-     # fetch the saved state from the redis cache
-    saved_state = get_state_from_redis(task_id=task_id)
-
-    if saved_state:
-        saved_state['qa_testing_status'] = qa_testing_review_decision
-        saved_state['qa_testing_feedback'] = qa_testing_review_feedback
-
-          # update the graph with thread
-        thread = {"configurable": {"thread_id": task_id}}
-        graph.update_state(thread, saved_state, as_node="qa_testing_review")
-
-         # Resume the graph stream
-        qa_testing_review_state = None
-        async for event in graph.astream(None, thread, stream_mode="values"):
-            print(f"QA testing review Event Received: {event}")
-            qa_testing_review_state = event
-
-          # saving the state before asking the product owner for review
-        current_state = graph.get_state(thread)
-        save_state_to_redis(task_id, current_state)
-
-    return {"task_id": task_id, "data": qa_testing_review_state } if saved_state else {"task_id": task_id}
-
-
-
-    
 def split_task_to_requirements(task_statement: str) -> list[str]:
         """
         Extracts clear and concise requirements from a given task statement.
@@ -350,6 +193,69 @@ def split_task_to_requirements(task_statement: str) -> list[str]:
             print(f"An error occurred: {e}")
             return []
 
+async def generic_workflow_review(
+    task_id: str, 
+    request: Request, 
+    review_type: str
+):
+    """
+    Generic workflow review logic
+    """
+    data = await request.json()
+
+    # Getting review input based on type
+    review_status = data.get('review_status', '')
+    feedback_reason = data.get('feedback_reason', '')
+
+    # Get the graph instance from the app state
+    graph = app.state.graph
+
+    # Fetch the saved state from the redis cache
+    saved_state = get_state_from_redis(task_id)
+    if saved_state:
+        # Dynamically update state based on review type
+        if review_type == 'product_owner':
+            saved_state['product_decision'] = review_status
+            saved_state['feedback_reason'] = feedback_reason
+            node_name = "product_owner_review_decision"
+        elif review_type == 'design':
+            saved_state['design_documents']['review_status'] = review_status
+            saved_state['design_documents']['feedback_reason'] = feedback_reason
+            node_name = "design_review"
+        elif review_type == 'code':
+            saved_state['code_review_status'] = review_status
+            saved_state['code_review_feedback'] = feedback_reason
+            node_name = "code_review"
+        elif review_type == 'security':
+            saved_state['security_review_status'] = review_status
+            saved_state['security_review_feedback'] = feedback_reason
+            node_name = "security_review"
+        elif review_type == "testcase":
+            saved_state['test_case_review_status'] = review_status
+            saved_state['test_case_review_feedback'] = feedback_reason
+            node_name = "test_cases_review"
+        elif review_type == "qa":
+            saved_state['qa_testing_status'] = review_status
+            saved_state['qa_testing_feedback'] = feedback_reason
+            node_name = "qa_testing_review"
+        else:
+            raise ValueError(f"Unsupported review type: {review_type}")
+
+        # Update the graph with thread
+        thread = {"configurable": {"thread_id": task_id}}
+        graph.update_state(thread, saved_state, as_node=node_name)
+
+        # Resume the graph stream
+        state = None
+        async for event in graph.astream(None, thread, stream_mode="values"):
+            print(f"{review_type.capitalize()} Review Event Received: {event}")
+            state = event
+        
+        # Saving the state 
+        current_state = graph.get_state(thread)
+        save_state_to_redis(task_id, current_state)
+    
+    return {"task_id": task_id, "data": state} if saved_state else {"task_id": task_id}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
