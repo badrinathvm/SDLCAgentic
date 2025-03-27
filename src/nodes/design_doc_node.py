@@ -391,7 +391,7 @@ class DesignNode:
         return {
             **state,
             "current_node": "qa_testing",
-            "next_required_input": "deployment" if state['test_case_review_status'] == "approved" else "generate_test_cases",
+            "next_required_input": "qa_testing_review" if state['test_case_review_status'] == "approved" else "generate_test_cases",
             "qa_testing_status": state['test_case_review_status'],
             "qa_testing_comments": qa_testing_comments
         }
