@@ -13,6 +13,21 @@ This project was generated using a LangGraph project structure generator.
   -  `cache/`: Cache implementation files for staoring the state
 `.env`: Environment variables configuration
 
+## Frontend 
+ - Swift
+ - SwiftUI 
+
+## Backend Components 
+ - Fast API
+ - Python
+ - LangGraph: Agentic AI framework for workflow orchestration
+ - LangSmith: Graph debugging and visualization
+ - Redis Cache: State management solution providing:
+  - Efficient state and checkpoint storage
+  - Real-time state retrieval during API calls
+  - Consistent state updates throughout the workflow
+ - LLM - Groq
+
 ## Graph: 
 
 <img width="326" alt="SDLC_Graph_Flow" src="https://github.com/user-attachments/assets/15a57181-3a78-4ecc-ae22-bdea707f7229" />
@@ -66,7 +81,7 @@ Request Body:
     "feedback_reason": ""
 }
 
-Response: 
+Sample Response: 
 {
   "task_id": "sdlc-task-1234",
   "data": {
